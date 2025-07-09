@@ -1,11 +1,10 @@
-use rand::{rng, Rng};
+use rand::{Rng, rng};
 
-use ntt::*;
+use rust_ntt::*;
 
 fn main() {
     let mut generator = rng();
-    let q : u64 = 741507920154517877;
-
+    let q: u64 = 741507920154517877;
 
     let ring = PolyRing::new(q, 4);
 
@@ -22,7 +21,6 @@ fn main() {
     // println!("a = {}", a);
     // println!("b = {}", b);
 
-
     // println!("checking addition");
 
     // let c1 = modadd(a, b, q);
@@ -30,7 +28,6 @@ fn main() {
 
     // println!("c1 = {}", c1);
     // println!("c2 = {}", c2);
-
 
     // println!("checking subtraction");
 
@@ -40,7 +37,6 @@ fn main() {
     // println!("c1 = {}", c1);
     // println!("c2 = {}", c2);
 
-    
     // println!("checking barrett multiplication");
 
     // let mu = barrett_precompute(q);
@@ -50,5 +46,4 @@ fn main() {
 
     // println!("c1 = {}", c1);
     // println!("c2 = {}", c2);
-
 }
