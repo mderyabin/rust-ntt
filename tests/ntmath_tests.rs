@@ -254,3 +254,24 @@ fn test_modmul_barrett_struct() {
     assert_eq!(barrett64.modmul(a, Q - 1), modnegate(a, Q));
     assert_eq!(barrett64.modmul(Q - 1, a), modnegate(a, Q));
 }
+
+#[test]
+fn test_modmul_struct_vs_naive() {
+    let mut rng = rng();
+    let q = 741507920154517877;
+    let class = CongruenceClass::new(q);
+
+    for _ in 0..10 {
+        let a: u64 = rng.random_range(1..q);
+        let b: u64 = rng.random_range(1..q);
+
+        let fast = class.modmul(a, b); // Barrett
+        let slow = modmul_naive(a, b, q); // Reference
+
+        assert_eq!(
+            fast, slow,
+            "a = {}, b = {}, got {}, expected {}",
+            a, b, fast, slow
+        );
+    }
+}
