@@ -61,13 +61,15 @@ fn test_mul_eq() {
     let mut ax: Vec<u64> = ring.sample_random();
     let bx: Vec<u64> = ring.sample_random();
 
+    let ax_orig = ax.clone();
+
     let expected: Vec<u64> = ax
         .iter()
-        .zip(bx.clone())
-        .map(|(&a, b)| modmul_naive(a, b, Q))
+        .zip(&bx)
+        .map(|(&a, &b)| modmul_naive(a, b, Q))
         .collect();
 
     ring.mul_eq(&mut ax, &bx);
 
-    assert_eq!(ax, expected);
+    assert_eq!(ax_orig, expected);
 }
