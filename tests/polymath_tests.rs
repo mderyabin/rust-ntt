@@ -1,9 +1,8 @@
-use super::*;
+use rust_ntt::*;
 
-const Q : u64 = 741507920154517877;
+const Q: u64 = 741507920154517877;
 // const Q : u64 = 1u64<<62-1;
 const N: usize = 1usize << 2;
-
 
 #[test]
 fn test_add() {
@@ -12,7 +11,11 @@ fn test_add() {
     let ax: Vec<u64> = ring.sample_random();
     let bx: Vec<u64> = ring.sample_random();
 
-    let expected: Vec<u64> = ax.iter().zip(bx.clone()).map(|(&a, b)| modadd_naive(a, b, Q) ).collect();
+    let expected: Vec<u64> = ax
+        .iter()
+        .zip(bx.clone())
+        .map(|(&a, b)| modadd_naive(a, b, Q))
+        .collect();
 
     assert_eq!(ring.add(&ax, &bx), expected);
 }
@@ -24,7 +27,11 @@ fn test_add_eq() {
     let mut ax: Vec<u64> = ring.sample_random();
     let bx: Vec<u64> = ring.sample_random();
 
-    let expected: Vec<u64> = ax.iter().zip(bx.clone()).map(|(&a, b)| modadd_naive(a, b, Q) ).collect();
+    let expected: Vec<u64> = ax
+        .iter()
+        .zip(bx.clone())
+        .map(|(&a, b)| modadd_naive(a, b, Q))
+        .collect();
 
     ring.add_eq(&mut ax, &bx);
 
@@ -38,7 +45,11 @@ fn test_mul() {
     let ax: Vec<u64> = ring.sample_random();
     let bx: Vec<u64> = ring.sample_random();
 
-    let expected: Vec<u64> = ax.iter().zip(bx.clone()).map(|(&a, b)| modmul_naive(a, b, Q) ).collect();
+    let expected: Vec<u64> = ax
+        .iter()
+        .zip(bx.clone())
+        .map(|(&a, b)| modmul_naive(a, b, Q))
+        .collect();
 
     assert_eq!(ring.mul(&ax, &bx), expected);
 }
@@ -50,7 +61,11 @@ fn test_mul_eq() {
     let mut ax: Vec<u64> = ring.sample_random();
     let bx: Vec<u64> = ring.sample_random();
 
-    let expected: Vec<u64> = ax.iter().zip(bx.clone()).map(|(&a, b)| modmul_naive(a, b, Q) ).collect();
+    let expected: Vec<u64> = ax
+        .iter()
+        .zip(bx.clone())
+        .map(|(&a, b)| modmul_naive(a, b, Q))
+        .collect();
 
     ring.mul_eq(&mut ax, &bx);
 
