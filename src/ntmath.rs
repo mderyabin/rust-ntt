@@ -108,8 +108,10 @@ pub fn modmul_barrett_eq(a: &mut u64, b: u64, q: u64, mu: u128) {
 #[derive(Debug, Clone, Copy)]
 #[repr(C, align(128))]
 pub struct CongruenceClass {
-    mu: u128,
+    // mu: u128,
+    mu: u64,
     pub q: u64,
+    logq: u64, // можно меньше, но с выравниванием может быть лучше 64 бита
 }
 
 impl CongruenceClass {
@@ -117,9 +119,13 @@ impl CongruenceClass {
         assert!(q >= 2, "modulus must be ≥ 2");
         assert!(q < (1u64 << 63), "modulus must be < 2^63");
 
-        let mu: u128 = (1u128 << (2 * 63)) / (q as u128);
+        // let mu: u128 = (1u128 << (2 * 63)) / (q as u128);
 
-        Self { q, mu }
+        let logq: u64 =  64 - (q.leading_zeros() as u64);
+        let mu: u64 = ((1u128 << (2 * logq)) / (q as u128)) as u64;
+
+
+        Self { q, mu, logq }
     }
     // mu = (2^126 / q)
 
@@ -127,8 +133,8 @@ impl CongruenceClass {
     pub fn modmul(&self, a: u64, b: u64) -> u64 {
         let mul = (a as u128) * (b as u128);
 
-        let tmp1 = mul >> 62; // (ab / 2^62)
-        let tmp2 = (tmp1 * self.mu) >> 64;
+        let tmp1 = mul >> (self.logq - 1); // (ab / 2^62)
+        let tmp2 = (tmp1 * (self.mu as u128)) >> (self.logq + 1);
         // (ab / 2^62) * (2^126 / q) / 2^64 = (ab 2^64 / q) / 2^64 = floor(ab/q)
 
         let r = (mul.wrapping_sub(tmp2 * (self.q as u128))) as u64;
@@ -146,8 +152,8 @@ impl CongruenceClass {
     pub fn modmul_eq(&self, a: &mut u64, b: u64) {
         let mul = (*a as u128) * (b as u128);
 
-        let tmp1 = mul >> 62;
-        let tmp2 = (tmp1 * self.mu) >> 64;
+        let tmp1 = mul >> (self.logq - 1); // (ab / 2^62)
+        let tmp2 = (tmp1 * (self.mu as u128)) >> (self.logq + 1);
 
         let r = (mul.wrapping_sub(tmp2 * (self.q as u128))) as u64;
 

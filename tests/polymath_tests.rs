@@ -71,5 +71,5 @@ fn test_mul_eq() {
 
     ring.mul_eq(&mut ax, &bx);
 
-    assert_eq!(ax_orig, expected);
+    assert_eq!(ax, expected);
 }
