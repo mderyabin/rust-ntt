@@ -210,6 +210,6 @@ fn bench_naive_neg_conv(c: &mut Criterion) {
     });
 }
 
-// criterion_group!(benches, benchmark_modadd_naive, benchmark_modadd, benchmark_modsub, benchmark_modadd_struct, benchmark_modadd_eq_struct, benchmark_modsub_struct, benchmark_modsub_eq_struct, benchmark_modmul_naive, benchmark_modmul_barrett_old, benchmark_modmul_barrett_old_eq, benchmark_modmul_barrett, benchmark_modmul_barrett_eq, benchmark_modmul_barrett_struct, benchmark_modmul_barrett_eq_struct);
-criterion_group!(benches, bench_naive_neg_conv);
+criterion_group!(benches, benchmark_modadd_naive, benchmark_modadd, benchmark_modsub, benchmark_modadd_struct, benchmark_modadd_eq_struct, benchmark_modsub_struct, benchmark_modsub_eq_struct, benchmark_modmul_naive, benchmark_modmul_barrett_old, benchmark_modmul_barrett_old_eq, benchmark_modmul_barrett, benchmark_modmul_barrett_eq, benchmark_modmul_barrett_struct, benchmark_modmul_barrett_eq_struct);
+// criterion_group!(benches, bench_naive_neg_conv);
 criterion_main!(benches);

@@ -133,8 +133,8 @@ impl CongruenceClass {
     pub fn modmul(&self, a: u64, b: u64) -> u64 {
         let mul = (a as u128) * (b as u128);
 
-        let tmp1 = mul >> (self.logq - 1); // (ab / 2^62)
-        let tmp2 = (tmp1 * (self.mu as u128)) >> (self.logq + 1);
+        let tmp1 = mul >> (self.logq - 2); // (ab / 2^62)
+        let tmp2 = (tmp1 * (self.mu as u128)) >> (self.logq + 2);
         // (ab / 2^62) * (2^126 / q) / 2^64 = (ab 2^64 / q) / 2^64 = floor(ab/q)
 
         let r = (mul.wrapping_sub(tmp2 * (self.q as u128))) as u64;
@@ -152,8 +152,8 @@ impl CongruenceClass {
     pub fn modmul_eq(&self, a: &mut u64, b: u64) {
         let mul = (*a as u128) * (b as u128);
 
-        let tmp1 = mul >> (self.logq - 1); // (ab / 2^62)
-        let tmp2 = (tmp1 * (self.mu as u128)) >> (self.logq + 1);
+        let tmp1 = mul >> (self.logq - 2); // (ab / 2^62)
+        let tmp2 = (tmp1 * (self.mu as u128)) >> (self.logq + 2);
 
         let r = (mul.wrapping_sub(tmp2 * (self.q as u128))) as u64;
 
