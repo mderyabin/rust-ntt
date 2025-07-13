@@ -1,6 +1,8 @@
 // Number Theoretic functions necessary for implementation
 // down to a scalar number operations
 
+use primal::{is_prime, Sieve};
+
 /** naive version to test performance **/
 #[inline]
 pub fn modadd_naive(a: u64, b: u64, q: u64) -> u64 {
@@ -149,6 +151,25 @@ impl CongruenceClass {
     }
 
     #[inline]
+    pub fn modsquare(&self, a: u64) -> u64 {
+        let mul = (a as u128) * (a as u128);
+
+        let tmp1 = mul >> (self.logq - 2); // (ab / 2^62)
+        let tmp2 = (tmp1 * (self.mu as u128)) >> (self.logq + 2);
+        // (ab / 2^62) * (2^126 / q) / 2^64 = (ab 2^64 / q) / 2^64 = floor(ab/q)
+
+        let r = (mul.wrapping_sub(tmp2 * (self.q as u128))) as u64;
+        // ab - floor(ab/q) * q = ab mod q
+
+        // return if r < self.q { r } else { r.wrapping_sub(self.q) };
+        if r < self.q {
+            r
+        } else {
+            r.wrapping_sub(self.q)
+        }
+    }
+
+    #[inline]
     pub fn modmul_eq(&self, a: &mut u64, b: u64) {
         let mul = (*a as u128) * (b as u128);
 
@@ -164,6 +185,23 @@ impl CongruenceClass {
         };
     }
 
+    #[inline]
+    pub fn modsquare_eq(&self, a: &mut u64) {
+        let mul = (*a as u128) * (*a as u128);
+
+        let tmp1 = mul >> (self.logq - 2); // (ab / 2^62)
+        let tmp2 = (tmp1 * (self.mu as u128)) >> (self.logq + 2);
+
+        let r = (mul.wrapping_sub(tmp2 * (self.q as u128))) as u64;
+
+        *a = if r < self.q {
+            r
+        } else {
+            r.wrapping_sub(self.q)
+        };
+    }
+
+    #[inline]
     pub fn modadd(&self, a: u64, b: u64) -> u64 {
         let t = a + b;
         if t <= self.q {
@@ -173,6 +211,7 @@ impl CongruenceClass {
         }
     }
 
+    #[inline]
     pub fn modadd_eq(&self, a: &mut u64, b: u64) {
         let t = *a + b;
         *a = if t <= self.q {
@@ -182,6 +221,7 @@ impl CongruenceClass {
         };
     }
 
+    #[inline]
     pub fn modsub(&self, a: u64, b: u64) -> u64 {
         if a >= b {
             a.wrapping_sub(b)
@@ -190,6 +230,7 @@ impl CongruenceClass {
         }
     }
 
+    #[inline]
     pub fn modsub_eq(&self, a: &mut u64, b: u64) {
         *a = if *a >= b {
             (*a).wrapping_sub(b)
@@ -198,11 +239,139 @@ impl CongruenceClass {
         };
     }
 
+    #[inline]
     pub fn modneg(&self, a: u64) -> u64 {
         self.q.wrapping_sub(a)
     }
 
+    #[inline]
     pub fn modneg_eq(&self, a: &mut u64) {
         (*a) = self.q.wrapping_sub(*a);
     }
+
+    #[inline]
+    pub fn modexp(&self, a: u64, e: u64) -> u64 {
+        let mut base = a.clone();
+        let mut exp = e;
+
+        let mut result = 1u64;
+
+        while exp>0 {
+            if exp%2 == 1 {
+                result = self.modmul(result, base);
+            }
+            base = self.modsquare(base);
+            exp >>= 1;
+        }
+
+        result
+    }
+
+    #[inline]
+    pub fn modexp_eq(&self, a: &mut u64, e: u64) {
+        let mut base = a.clone();
+        let mut exp = e;
+
+        *a = 1u64;
+
+        while exp>0 {
+            if exp%2 == 1 {
+                self.modmul_eq(&mut *a, base);
+            }
+            self.modsquare_eq(&mut base);
+            exp >>= 1;
+        }
+    }
+}
+
+
+/** prime numbers and generators (using primal)**/
+
+pub fn find_first_prime_up(logq: usize, n: usize) -> u64 {
+    let mut q: u64 = (1u64 << logq) + 1;
+    let m: u64 = (n as u64)<<1;
+
+    while !is_prime(q) {
+        q += m;
+    }
+
+    q
+}
+
+pub fn find_next_prime_up(prev_q: u64, n: usize) -> u64 {
+    let m: u64 = (n as u64)<<1;
+    let mut q = prev_q + m;
+
+    while !is_prime(q) {
+        q += m;
+    }
+
+    q
+}
+
+pub fn find_first_prime_down(logq: usize, n: usize) -> u64 {
+    let m: u64 = (n as u64)<<1;
+    let mut q: u64 = (1u64 << logq) + 1 - m;
+
+    while !is_prime(q) {
+        q -= m;
+    }
+
+    q
+}
+
+pub fn find_next_prime_down(prev_q: u64, n: usize) -> u64 {
+    let m: u64 = (n as u64)<<1;
+    let mut q = prev_q - m;
+
+    while !is_prime(q) {
+        q -= m;
+    }
+
+    q
+}
+
+pub fn find_primitive_root(q: u64) -> u64 {
+    assert!(is_prime(q), "primitive root search: modulus must prime");
+    
+
+    let phi = q - 1;
+    let logq = 64-q.leading_zeros();
+
+    println!("search");
+
+    let sieve = Sieve::new(1usize << (1+logq/2));
+    let class = CongruenceClass::new(q);
+
+    println!("search");
+
+
+    let phi_factorized = sieve.factor(phi as usize).unwrap();
+
+    let mut gen_found = false;
+    let mut r = 1;
+    while  !gen_found {
+        r += 1;
+
+        gen_found = true;
+        for (prime, _) in &phi_factorized  {
+            if class.modexp(r, phi/(*prime as u64)) == 1 {
+                gen_found = false;
+                break;
+            }
+        }
+    }
+
+    r
+}
+
+pub fn find_generator(q: u64, n: usize) -> u64 {
+    let class = CongruenceClass::new(q);
+
+    let m = (n<<1) as u64;
+
+    let g0 = find_primitive_root(q);
+    let g = class.modexp(g0, (q-1)/m);
+
+    g
 }

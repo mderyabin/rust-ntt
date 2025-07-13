@@ -197,19 +197,7 @@ fn benchmark_modmul_barrett_eq_struct(c: &mut Criterion) {
     });
 }
 
-fn bench_naive_neg_conv(c: &mut Criterion) {
-    let q: u64 = 741507920154517877;
 
-    let ring = PolyRing::new(q, 1usize << 12);
 
-    let ax = ring.sample_random();
-    let bx = ring.sample_random();
-
-    c.bench_function("modmul barrett struct eq", |b| {
-        b.iter(|| ring.naive_negacyclic_convolution(&black_box(&ax), &black_box(&bx)))
-    });
-}
-
-criterion_group!(benches, benchmark_modadd_naive, benchmark_modadd, benchmark_modsub, benchmark_modadd_struct, benchmark_modadd_eq_struct, benchmark_modsub_struct, benchmark_modsub_eq_struct, benchmark_modmul_naive, benchmark_modmul_barrett_old, benchmark_modmul_barrett_old_eq, benchmark_modmul_barrett, benchmark_modmul_barrett_eq, benchmark_modmul_barrett_struct, benchmark_modmul_barrett_eq_struct);
-// criterion_group!(benches, bench_naive_neg_conv);
-criterion_main!(benches);
+criterion_group!(arith, benchmark_modadd_naive, benchmark_modadd, benchmark_modsub, benchmark_modadd_struct, benchmark_modadd_eq_struct, benchmark_modsub_struct, benchmark_modsub_eq_struct, benchmark_modmul_naive, benchmark_modmul_barrett_old, benchmark_modmul_barrett_old_eq, benchmark_modmul_barrett, benchmark_modmul_barrett_eq, benchmark_modmul_barrett_struct, benchmark_modmul_barrett_eq_struct);
+criterion_main!(arith);

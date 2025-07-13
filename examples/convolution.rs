@@ -1,9 +1,9 @@
-use rand::{Rng, rng};
+// use rand::{rng};
 
 use rust_ntt::*;
 
 fn main() {
-    let mut generator = rng();
+    // let mut generator = rng();
     let q: u64 = 741507920154517877;
 
     let ring = PolyRing::new(q, 4);
