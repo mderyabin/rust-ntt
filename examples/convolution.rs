@@ -6,7 +6,7 @@ fn main() {
     // let mut generator = rng();
     let q: u64 = 741507920154517877;
 
-    let ring = PolyRing::new(q, 4);
+    let ring = PolyRing::<4>::new(q);
 
     let ax = vec![1u64, 2, 3, 4];
     let bx = vec![5u64, 6, 7, 8];

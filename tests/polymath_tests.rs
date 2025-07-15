@@ -6,32 +6,32 @@ const N: usize = 1usize << 2;
 
 #[test]
 fn test_add() {
-    let ring = PolyRing::new(Q, N);
+    let ring = PolyRing::<N>::new(Q);
 
-    let ax: Vec<u64> = ring.sample_random();
-    let bx: Vec<u64> = ring.sample_random();
+    let ax = ring.sample_random();
+    let bx= ring.sample_random();
 
-    let expected: Vec<u64> = ax
-        .iter()
-        .zip(bx.clone())
-        .map(|(&a, b)| modadd_naive(a, b, Q))
-        .collect();
+
+    let mut expected = [0u64; N];
+    for i in 0..N {
+        expected[i] = modadd_naive(ax[i], bx[i], Q)
+    }
 
     assert_eq!(ring.add(&ax, &bx), expected);
 }
 
 #[test]
 fn test_add_eq() {
-    let ring = PolyRing::new(Q, N);
+    let ring = PolyRing::<N>::new(Q);
 
-    let mut ax: Vec<u64> = ring.sample_random();
-    let bx: Vec<u64> = ring.sample_random();
+    let mut ax = ring.sample_random();
+    let bx= ring.sample_random();
 
-    let expected: Vec<u64> = ax
-        .iter()
-        .zip(bx.clone())
-        .map(|(&a, b)| modadd_naive(a, b, Q))
-        .collect();
+
+    let mut expected = [0u64; N];
+    for i in 0..N {
+        expected[i] = modadd_naive(ax[i], bx[i], Q)
+    }
 
     ring.add_eq(&mut ax, &bx);
 
@@ -40,34 +40,33 @@ fn test_add_eq() {
 
 #[test]
 fn test_mul() {
-    let ring = PolyRing::new(Q, N);
+    let ring = PolyRing::<N>::new(Q);
 
-    let ax: Vec<u64> = ring.sample_random();
-    let bx: Vec<u64> = ring.sample_random();
+    let ax = ring.sample_random();
+    let bx= ring.sample_random();
 
-    let expected: Vec<u64> = ax
-        .iter()
-        .zip(bx.clone())
-        .map(|(&a, b)| modmul_naive(a, b, Q))
-        .collect();
+
+    let mut expected = [0u64; N];
+    for i in 0..N {
+        expected[i] = modmul_naive(ax[i], bx[i], Q)
+    }
 
     assert_eq!(ring.mul(&ax, &bx), expected);
 }
 
 #[test]
 fn test_mul_eq() {
-    let ring = PolyRing::new(Q, N);
+    let ring = PolyRing::<N>::new(Q);
 
-    let mut ax: Vec<u64> = ring.sample_random();
-    let bx: Vec<u64> = ring.sample_random();
+    let mut ax = ring.sample_random();
+    let bx= ring.sample_random();
 
-    let ax_orig = ax.clone();
+    // let ax_orig = ax.clone();
 
-    let expected: Vec<u64> = ax
-        .iter()
-        .zip(&bx)
-        .map(|(&a, &b)| modmul_naive(a, b, Q))
-        .collect();
+    let mut expected = [0u64; N];
+    for i in 0..N {
+        expected[i] = modmul_naive(ax[i], bx[i], Q)
+    }
 
     ring.mul_eq(&mut ax, &bx);
 

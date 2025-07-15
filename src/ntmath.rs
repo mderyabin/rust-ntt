@@ -282,6 +282,16 @@ impl CongruenceClass {
             exp >>= 1;
         }
     }
+
+    #[inline]
+    pub fn modinv(&self, a: u64) -> u64 {
+        self.modexp(a, self.q-2)
+    }
+
+    #[inline]
+    pub fn modinv_eq(&self, a: &mut u64) {
+        self.modexp_eq(&mut *a, self.q-2);
+    }
 }
 
 
