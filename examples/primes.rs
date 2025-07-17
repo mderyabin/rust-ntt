@@ -15,9 +15,9 @@ fn main() {
     // println!("check prime = {}", q % (n as u64));
 
 
-    // q = find_next_prime_up(q, n);
-    // println!("first prime = {}", q);
-    // println!("check prime = {}", q % (n as u64));
+    q = find_next_prime_up(q, n);
+    println!("first prime = {}", q);
+    println!("check prime = {}", q % (n as u64));
 
 
     // q = find_next_prime_down(q, n);

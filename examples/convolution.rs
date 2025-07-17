@@ -1,49 +1,19 @@
-// use rand::{rng};
-
 use rust_ntt::*;
 
 fn main() {
-    // let mut generator = rng();
-    let q: u64 = 741507920154517877;
+    const N: usize = 4;
+    let q = find_first_prime_up(5, N);
 
-    let ring = PolyRing::<4>::new(q);
+    let ring = PolyRing::<N>::new(q);
 
-    let ax = vec![1u64, 2, 3, 4];
-    let bx = vec![5u64, 6, 7, 8];
+    let ax = ring.sample_random();
+    let bx = ring.sample_random();
 
     let cx = ring.naive_negacyclic_convolution(&ax, &bx);
 
     dbg!(&cx);
 
-    // let a : u64 = generator.random_range(1..q);
-    // let b : u64 = generator.random_range(1..q);
+    let cx_ntt = ring.ntt_negacyclic_convolution(&ax, &bx);
 
-    // println!("a = {}", a);
-    // println!("b = {}", b);
-
-    // println!("checking addition");
-
-    // let c1 = modadd(a, b, q);
-    // let c2 = modadd_naive(a, b, q);
-
-    // println!("c1 = {}", c1);
-    // println!("c2 = {}", c2);
-
-    // println!("checking subtraction");
-
-    // let c1 = modsub(a, b, q);
-    // let c2 = (q+a-b) % q;
-
-    // println!("c1 = {}", c1);
-    // println!("c2 = {}", c2);
-
-    // println!("checking barrett multiplication");
-
-    // let mu = barrett_precompute(q);
-
-    // let c1 = modmul_barrett(a, b, q, mu);
-    // let c2 = modmul_naive(a, b, q);
-
-    // println!("c1 = {}", c1);
-    // println!("c2 = {}", c2);
+    dbg!(&cx_ntt);
 }

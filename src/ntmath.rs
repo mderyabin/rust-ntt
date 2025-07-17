@@ -348,13 +348,8 @@ pub fn find_primitive_root(q: u64) -> u64 {
     let phi = q - 1;
     let logq = 64-q.leading_zeros();
 
-    println!("search");
-
     let sieve = Sieve::new(1usize << (1+logq/2));
     let class = CongruenceClass::new(q);
-
-    println!("search");
-
 
     let phi_factorized = sieve.factor(phi as usize).unwrap();
 
