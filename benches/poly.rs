@@ -4,12 +4,12 @@ use rust_ntt::*;
 
 use std::hint::black_box;
 
-const Q: u64 = 741507920154517877;
+// const Q: u64 = 741507920154517877;
+const N: usize = 1usize<<12;
 
 
 fn bench_naive_neg_conv(c: &mut Criterion) {
-    const N: usize = 1usize<<12;
-    let q: u64 = Q.clone();
+    let q: u64 = find_first_prime_down(58, N);
 
     let ring = PolyRing::<N>::new(q);
 
@@ -22,8 +22,7 @@ fn bench_naive_neg_conv(c: &mut Criterion) {
 }
 
 fn bench_ntt_neg_conv(c: &mut Criterion) {
-    const N: usize = 1usize<<12;
-    let q: u64 = Q.clone();
+    let q: u64 = find_first_prime_down(58, N);
 
     let ring = PolyRing::<N>::new(q);
 
@@ -36,8 +35,7 @@ fn bench_ntt_neg_conv(c: &mut Criterion) {
 }
 
 fn bench_ntt_forward(c: &mut Criterion) {
-    const N: usize = 1usize<<12;
-    let q: u64 = Q.clone();
+    let q: u64 = find_first_prime_down(58, N);
 
     let ring = PolyRing::<N>::new(q);
 
@@ -49,8 +47,7 @@ fn bench_ntt_forward(c: &mut Criterion) {
 }
 
 fn bench_ntt_inverse(c: &mut Criterion) {
-    const N: usize = 1usize<<12;
-    let q: u64 = Q.clone();
+    let q: u64 = find_first_prime_down(58, N);
 
     let ring = PolyRing::<N>::new(q);
 
