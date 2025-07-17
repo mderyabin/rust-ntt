@@ -14,12 +14,10 @@ fn main() {
     // println!("first prime = {}", q);
     // println!("check prime = {}", q % (n as u64));
 
-
     q = find_next_prime_up(q, n);
     println!("first prime = {}", q);
     println!("check prime = {}", q % (n as u64));
 
-
     // q = find_next_prime_down(q, n);
     // println!("first prime = {}", q);
     // println!("check prime = {}", q % (n as u64));
@@ -31,7 +29,6 @@ fn main() {
     // q = find_next_prime_down(q, n);
     // println!("first prime = {}", q);
     // println!("check prime = {}", q % (n as u64));
-
 
     let g0 = find_primitive_root(q);
     println!("root = {}", g0);
@@ -40,8 +37,5 @@ fn main() {
     println!("generator = {}", g);
 
     println!("check 1 = {}", class.modexp(g, n as u64));
-    println!("check 2 = {}", class.modexp(g, (n<<1) as u64));
-    
-
-
+    println!("check 2 = {}", class.modexp(g, (n << 1) as u64));
 }
