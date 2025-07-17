@@ -1,14 +1,25 @@
 [package]
-name = "ntt"
-version = "0.1.0"
+name = "rust_ntt"
+version = "0.1.1"
 edition = "2024"
 
 [dependencies]
+primal = "0.3"
 rand = "0.9.1"
 
 [dev-dependencies] 
 criterion = "0.6.0"
+concrete-ntt = "0.2.0"
+
+[lib]
+name = "rust_ntt"
+path = "src/lib.rs"
 
 [[bench]]
-name = "benches"
+name = "arith"
 harness = false
+
+[[bench]]
+name = "poly"
+harness = false
+

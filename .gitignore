@@ -1,1 +1,6 @@
 /target
+
+# misc
+.amc.toml
+.tmuxp.yaml
+ntt_code.txt
