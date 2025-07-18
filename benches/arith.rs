@@ -197,6 +197,54 @@ fn benchmark_modmul_barrett_eq_struct(c: &mut Criterion) {
     });
 }
 
+fn benchmark_modmul_shoup_struct(c: &mut Criterion) {
+    let mut generator: rand::prelude::ThreadRng = rng();
+
+    let in1: u64 = generator.random_range(1..Q);
+    let in2: u64 = generator.random_range(1..Q);
+
+    let class = CongruenceClass::new(Q);
+
+    let prec = class.precompute_shoup(in2);
+
+
+    c.bench_function("modmul shoup struct", |b| {
+        b.iter(|| class.modmul_shoup(black_box(in1), black_box(in2), black_box(prec)))
+    });
+}
+
+fn benchmark_modmul_shoup_as64_struct(c: &mut Criterion) {
+    let mut generator: rand::prelude::ThreadRng = rng();
+
+    let in1: u64 = generator.random_range(1..Q);
+    let in2: u64 = generator.random_range(1..Q);
+
+    let class = CongruenceClass::new(Q);
+
+    let prec = class.precompute_shoup(in2);
+
+
+    c.bench_function("modmul shoup struct as64", |b| {
+        b.iter(|| class.modmul_shoup_as64(black_box(in1), black_box(in2), black_box(prec)))
+    });
+}
+
+fn benchmark_modmul_shoup_eq_struct(c: &mut Criterion) {
+    let mut generator: rand::prelude::ThreadRng = rng();
+
+    let mut in1: u64 = generator.random_range(1..Q);
+    let in2: u64 = generator.random_range(1..Q);
+
+    let class = CongruenceClass::new(Q);
+
+    let prec = class.precompute_shoup(in2);
+
+
+    c.bench_function("modmul shoup eq struct", |b| {
+        b.iter(|| class.modmul_shoup_eq(&mut in1, black_box(in2), black_box(prec)))
+    });
+}
+
 criterion_group!(
     arith,
     benchmark_modadd_naive,
@@ -212,6 +260,9 @@ criterion_group!(
     benchmark_modmul_barrett,
     benchmark_modmul_barrett_eq,
     benchmark_modmul_barrett_struct,
-    benchmark_modmul_barrett_eq_struct
+    benchmark_modmul_barrett_eq_struct,
+    benchmark_modmul_shoup_struct,
+    benchmark_modmul_shoup_as64_struct,
+    benchmark_modmul_shoup_eq_struct
 );
 criterion_main!(arith);

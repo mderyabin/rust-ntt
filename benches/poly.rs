@@ -39,6 +39,21 @@ fn bench_ntt_neg_conv(c: &mut Criterion) {
     });
 }
 
+fn bench_ntt_neg_conv_shoup(c: &mut Criterion) {
+    let q: u64 = find_first_prime_down(58, N);
+
+    let ring = PolyRing::<N>::new(q);
+
+    let ax = ring.sample_random();
+    let bx = ring.sample_random();
+
+    c.bench_function("ntt convolution shoup", |b| {
+        b.iter(|| {
+            ring.ntt_negacyclic_convolution_shoup(black_box(&ax), black_box(&bx));
+        })
+    });
+}
+
 fn bench_ntt_forward(c: &mut Criterion) {
     let q: u64 = find_first_prime_down(58, N);
 
@@ -46,7 +61,7 @@ fn bench_ntt_forward(c: &mut Criterion) {
 
     let ax = ring.sample_random();
 
-    c.bench_function("ntt forward ", |b| {
+    c.bench_function("ntt forward barrett", |b| {
         b.iter(|| {
             ring.ntt_forward(&mut black_box(ax));
         })
@@ -60,9 +75,37 @@ fn bench_ntt_inverse(c: &mut Criterion) {
 
     let mut ax = ring.sample_random();
 
-    c.bench_function("ntt inverse ", |b| {
+    c.bench_function("ntt inverse barrett", |b| {
         b.iter(|| {
             ring.ntt_inverse(&mut ax);
+        })
+    });
+}
+
+fn bench_ntt_forward_shoup(c: &mut Criterion) {
+    let q: u64 = find_first_prime_down(58, N);
+
+    let ring = PolyRing::<N>::new(q);
+
+    let ax = ring.sample_random();
+
+    c.bench_function("ntt forward shoup", |b| {
+        b.iter(|| {
+            ring.ntt_forward_shoup(&mut black_box(ax));
+        })
+    });
+}
+
+fn bench_ntt_inverse_shoup(c: &mut Criterion) {
+    let q: u64 = find_first_prime_down(58, N);
+
+    let ring = PolyRing::<N>::new(q);
+
+    let mut ax = ring.sample_random();
+
+    c.bench_function("ntt inverse shoup", |b| {
+        b.iter(|| {
+            ring.ntt_inverse_shoup(&mut ax);
         })
     });
 }
@@ -101,9 +144,12 @@ criterion_group!(
     poly,
     bench_naive_neg_conv,
     bench_ntt_neg_conv,
+    bench_ntt_neg_conv_shoup,
     bench_ntt_forward,
     bench_ntt_inverse,
+    bench_ntt_forward_shoup,
+    bench_ntt_inverse_shoup,
     bench_concrete_forward,
-    bench_concrete_inverse
+    bench_concrete_inverse,
 );
 criterion_main!(poly);

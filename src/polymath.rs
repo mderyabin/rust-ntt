@@ -6,10 +6,12 @@ use rand::{Rng, rng};
 pub struct PolyRing<const N: usize> {
     pub class: CongruenceClass,
 
-    g: u64,
-    invN: u64,
+    inv_n: u64,
+    inv_n_shoup: u64,
     tf: [u64; N],
+    tf_shoup: [u64; N],
     itf: [u64; N],
+    itf_shoup: [u64; N],
 }
 
 impl<const N: usize> PolyRing<N> {
@@ -21,14 +23,28 @@ impl<const N: usize> PolyRing<N> {
         let tf = compute_twiddle_factors::<N>(&class, g, false);
         let itf = compute_twiddle_factors::<N>(&class, g, true);
 
-        let invN = class.modinv(N as u64);
+        let mut tf_shoup = [0u64; N];
+        tf_shoup.iter_mut().enumerate().for_each(|(i, prec)| {
+            *prec = class.precompute_shoup(tf[i])
+        });
+
+        let mut itf_shoup = [0u64; N];
+        itf_shoup.iter_mut().enumerate().for_each(|(i, prec)| {
+            *prec = class.precompute_shoup(itf[i])
+        });
+
+
+        let inv_n = class.modinv(N as u64);
+        let inv_n_shoup = class.precompute_shoup(inv_n);
 
         Self {
             class,
-            g,
-            invN,
+            inv_n,
+            inv_n_shoup,
             tf,
+            tf_shoup,
             itf,
+            itf_shoup,
         }
     }
 
@@ -139,6 +155,7 @@ impl<const N: usize> PolyRing<N> {
         cx
     }
 
+    #[inline]
     pub fn ntt_forward(&self, ax: &mut [u64; N]) {
         // Cooley-Tukey forward negacyclic NTT
         // using algorithm from https://eprint.iacr.org/2016/504.pdf
@@ -169,6 +186,42 @@ impl<const N: usize> PolyRing<N> {
         }
     }
 
+    #[inline]
+    pub fn ntt_forward_shoup(&self, ax: &mut [u64; N]) {
+        // Cooley-Tukey forward negacyclic NTT
+        // using algorithm from https://eprint.iacr.org/2016/504.pdf
+
+        let mut t = N >> 1;
+        let mut n = 1;
+
+        while n < N {
+            // Обрабатываем все группы бабочек на текущем уровне
+            (0..n).for_each(|i| {
+                let j1 = 2 * i * t;
+                let j2 = j1 + t - 1;
+                let s = self.tf[n + i];
+                let s_shoup = self.tf_shoup[n + i];
+                
+                // Обрабатываем пары элементов в текущей группе
+                (j1..=j2).for_each(|j| {
+                    // let u = ax[j];
+                    let v = self.class.modmul_shoup(ax[j + t], s, s_shoup);
+                    
+                    // Операция бабочки
+                    // ax[j] = self.class.modadd(u, v);
+                    // ax[j + t] = self.class.modsub(u, v);
+                    ax[j + t] = self.class.modsub(ax[j], v);
+                    self.class.modadd_eq(&mut ax[j], v);
+
+                });
+            });
+            
+            n <<= 1;
+            t >>= 1;
+        }
+    }
+
+    #[inline]
     pub fn ntt_inverse(&self, ax: &mut [u64; N]) {
         // Gentelman-Sande inverse negacyclic NTT
         // using algorithm from https://eprint.iacr.org/2016/504.pdf
@@ -204,9 +257,54 @@ impl<const N: usize> PolyRing<N> {
 
         // Финальная нормализация
         ax.iter_mut().for_each(|x| {
-            *x = self.class.modmul(*x, self.invN);
+            *x = self.class.modmul(*x, self.inv_n);
         });
     }
+
+    #[inline]
+    pub fn ntt_inverse_shoup(&self, ax: &mut [u64; N]) {
+        // Gentelman-Sande inverse negacyclic NTT
+        // using algorithm from https://eprint.iacr.org/2016/504.pdf
+
+        let mut t = 1;
+        let mut h = N >> 1;
+
+        while h > 0 {
+            let mut j1 = 0;
+            
+            // Обрабатываем все группы бабочек на текущем уровне
+            (0..h).for_each(|i| {
+                let j2 = j1 + t - 1;
+                let s = self.itf[h + i];
+                let s_shoup = self.itf_shoup[h + i];
+
+                
+                // Обрабатываем пары элементов в текущей группе
+                (j1..=j2).for_each(|j| {
+                    let u = ax[j];
+                    let v = ax[j + t];
+                    
+                    // Операция бабочки
+                    ax[j] = self.class.modadd(u, v);
+                    ax[j + t] = self.class.modsub(u, v);
+                    // ax[j + t] = self.class.modmul_shoup(ax[j + t], s, s_shoup);
+                    self.class.modmul_shoup_eq(&mut ax[j + t], s, s_shoup);
+                });
+                
+                j1 += t << 1;
+            });
+            
+            h >>= 1;
+            t <<= 1;
+        }
+
+        // Финальная нормализация
+        ax.iter_mut().for_each(|x| {
+            // *x = self.class.modmul_shoup(*x, self.inv_n, self.inv_n_shoup);
+            self.class.modmul_shoup_eq(&mut *x, self.inv_n, self.inv_n_shoup);
+        });
+    }
+
 
     pub fn ntt_negacyclic_convolution(&self, ax: &[u64; N], bx: &[u64; N]) -> [u64; N]{
         let mut ax_ntt = *ax;
@@ -218,6 +316,20 @@ impl<const N: usize> PolyRing<N> {
         let mut cx_ntt = self.mul(&ax_ntt, &bx_ntt);
 
         self.ntt_inverse(&mut cx_ntt);
+
+        cx_ntt
+    }
+
+    pub fn ntt_negacyclic_convolution_shoup(&self, ax: &[u64; N], bx: &[u64; N]) -> [u64; N]{
+        let mut ax_ntt = *ax;
+        let mut bx_ntt = *bx;
+
+        self.ntt_forward_shoup(&mut ax_ntt);
+        self.ntt_forward_shoup(&mut bx_ntt);
+
+        let mut cx_ntt = self.mul(&ax_ntt, &bx_ntt);
+
+        self.ntt_inverse_shoup(&mut cx_ntt);
 
         cx_ntt
     }

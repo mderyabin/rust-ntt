@@ -130,6 +130,67 @@ impl CongruenceClass {
     }
     // mu = (2^126 / q)
 
+    pub fn precompute_shoup(&self, b: u64) -> u64 {
+        let w = (((b as u128) << 64) / (self.q as u128)) as u64;
+        w
+    }
+
+    #[inline]
+    pub fn modmul_shoup_as64(&self, a: u64, b: u64, b_prec: u64) -> u64 {
+        // эта функция как альтернатива modmul_shoup
+        // по идее mul и tmp (умножение на q) можно делать в u64 так как верхняя часть обрезается.
+        // это должно быть намного быстрее.
+        // бенчмарк этой функции действительно быстрее, 
+        // однако когда делаю бенчмарк ntt на ее основе, он значительно медленнее.
+        // скорее всего из-за проверок и wrapping_mul
+        // однако если делать без wrapping_mul то тесты падают и функция возвращает неверное значение
+        let mul = a.wrapping_mul(b);
+        let tmp = ((((a as u128) * (b_prec as u128)) >> 64) as u64).wrapping_mul(self.q as u64);
+
+        let r = mul.wrapping_sub(tmp);
+
+        if r < self.q {
+            r
+        } else {
+            r.wrapping_sub(self.q)
+        }
+    }
+
+    #[inline]
+    pub fn modmul_shoup(&self, a: u64, b: u64, b_prec: u64) -> u64 {
+        // let mul = a * b;
+        // let tmp = ((((a as u128) * (b_prec as u128)) >> 64) as u64) * (self.q as u64);
+        
+        let mul = (a as u128) * (b as u128);
+        let tmp = (((a as u128) * (b_prec as u128)) >> 64)  * (self.q as u128);
+
+        // let r = mul.wrapping_sub(tmp);
+        let r = (mul - tmp) as u64;
+
+        if r < self.q {
+            r
+        } else {
+            r.wrapping_sub(self.q)
+        }
+    }
+
+    #[inline]
+    pub fn modmul_shoup_eq(&self, a: &mut u64, b: u64, b_prec: u64) {
+        // let mul = (*a as u64).wrapping_mul(b as u64);
+        // let tmp = ((((*a as u128) * (b_prec as u128)) >> 64) as u64).wrapping_mul(self.q);
+        let mul = (*a as u128) * (b as u128);
+        let tmp = (((*a as u128) * (b_prec as u128)) >> 64) * (self.q as u128);
+
+        // let r = mul.wrapping_sub(tmp);
+        let r = (mul - tmp) as u64;
+
+        *a = if r < self.q {
+            r
+        } else {
+            r.wrapping_sub(self.q)
+        };
+    }
+
     #[inline]
     pub fn modmul(&self, a: u64, b: u64) -> u64 {
         let mul = (a as u128) * (b as u128);
