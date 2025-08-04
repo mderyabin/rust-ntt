@@ -24,15 +24,16 @@ impl<const N: usize> PolyRing<N> {
         let itf = compute_twiddle_factors::<N>(&class, g, true);
 
         let mut tf_shoup = [0u64; N];
-        tf_shoup.iter_mut().enumerate().for_each(|(i, prec)| {
-            *prec = class.precompute_shoup(tf[i])
-        });
+        tf_shoup
+            .iter_mut()
+            .enumerate()
+            .for_each(|(i, prec)| *prec = class.precompute_shoup(tf[i]));
 
         let mut itf_shoup = [0u64; N];
-        itf_shoup.iter_mut().enumerate().for_each(|(i, prec)| {
-            *prec = class.precompute_shoup(itf[i])
-        });
-
+        itf_shoup
+            .iter_mut()
+            .enumerate()
+            .for_each(|(i, prec)| *prec = class.precompute_shoup(itf[i]));
 
         let inv_n = class.modinv(N as u64);
         let inv_n_shoup = class.precompute_shoup(inv_n);
@@ -48,7 +49,7 @@ impl<const N: usize> PolyRing<N> {
         }
     }
 
-    pub fn sample_random(&self) -> [u64; N]{
+    pub fn sample_random(&self) -> [u64; N] {
         let mut generator = rng();
         let mut res = [0u64; N];
         res.iter_mut()
@@ -56,7 +57,7 @@ impl<const N: usize> PolyRing<N> {
         res
     }
 
-    pub fn add(&self, ax: &[u64], bx: &[u64]) -> [u64; N]{
+    pub fn add(&self, ax: &[u64], bx: &[u64]) -> [u64; N] {
         assert_eq!(ax.len(), N, "input must have len = {}", N);
         assert_eq!(bx.len(), N, "input must have len = {}", N);
 
@@ -77,7 +78,7 @@ impl<const N: usize> PolyRing<N> {
         });
     }
 
-    pub fn sub(&self, ax: &[u64], bx: &[u64]) -> [u64; N]{
+    pub fn sub(&self, ax: &[u64], bx: &[u64]) -> [u64; N] {
         assert_eq!(ax.len(), N, "input must have len = {}", N);
         assert_eq!(bx.len(), N, "input must have len = {}", N);
 
@@ -110,7 +111,7 @@ impl<const N: usize> PolyRing<N> {
         ax.iter_mut().for_each(|a| self.class.modneg_eq(a));
     }
 
-    pub fn mul(&self, ax: &[u64], bx: &[u64]) -> [u64; N]{
+    pub fn mul(&self, ax: &[u64], bx: &[u64]) -> [u64; N] {
         assert_eq!(ax.len(), N, "input must have len = {}", N);
         assert_eq!(bx.len(), N, "input must have len = {}", N);
 
@@ -131,7 +132,7 @@ impl<const N: usize> PolyRing<N> {
         });
     }
 
-    pub fn naive_negacyclic_convolution(&self, ax: &[u64], bx: &[u64]) -> [u64; N]{
+    pub fn naive_negacyclic_convolution(&self, ax: &[u64], bx: &[u64]) -> [u64; N] {
         assert_eq!(ax.len(), N, "input must have len = {}", N);
         assert_eq!(bx.len(), N, "input must have len = {}", N);
 
@@ -169,18 +170,18 @@ impl<const N: usize> PolyRing<N> {
                 let j1 = 2 * i * t;
                 let j2 = j1 + t - 1;
                 let s = self.tf[n + i];
-                
+
                 // Обрабатываем пары элементов в текущей группе
                 (j1..=j2).for_each(|j| {
                     let u = ax[j];
                     let v = self.class.modmul(ax[j + t], s);
-                    
+
                     // Операция бабочки
                     ax[j] = self.class.modadd(u, v);
                     ax[j + t] = self.class.modsub(u, v);
                 });
             });
-            
+
             n <<= 1;
             t >>= 1;
         }
@@ -201,21 +202,20 @@ impl<const N: usize> PolyRing<N> {
                 let j2 = j1 + t - 1;
                 let s = self.tf[n + i];
                 let s_shoup = self.tf_shoup[n + i];
-                
+
                 // Обрабатываем пары элементов в текущей группе
                 (j1..=j2).for_each(|j| {
                     // let u = ax[j];
                     let v = self.class.modmul_shoup(ax[j + t], s, s_shoup);
-                    
+
                     // Операция бабочки
                     // ax[j] = self.class.modadd(u, v);
                     // ax[j + t] = self.class.modsub(u, v);
                     ax[j + t] = self.class.modsub(ax[j], v);
                     self.class.modadd_eq(&mut ax[j], v);
-
                 });
             });
-            
+
             n <<= 1;
             t >>= 1;
         }
@@ -231,26 +231,26 @@ impl<const N: usize> PolyRing<N> {
 
         while h > 0 {
             let mut j1 = 0;
-            
+
             // Обрабатываем все группы бабочек на текущем уровне
             (0..h).for_each(|i| {
                 let j2 = j1 + t - 1;
                 let s = self.itf[h + i];
-                
+
                 // Обрабатываем пары элементов в текущей группе
                 (j1..=j2).for_each(|j| {
                     let u = ax[j];
                     let v = ax[j + t];
-                    
+
                     // Операция бабочки
                     ax[j] = self.class.modadd(u, v);
                     ax[j + t] = self.class.modsub(u, v);
                     ax[j + t] = self.class.modmul(ax[j + t], s);
                 });
-                
+
                 j1 += t << 1;
             });
-            
+
             h >>= 1;
             t <<= 1;
         }
@@ -271,29 +271,28 @@ impl<const N: usize> PolyRing<N> {
 
         while h > 0 {
             let mut j1 = 0;
-            
+
             // Обрабатываем все группы бабочек на текущем уровне
             (0..h).for_each(|i| {
                 let j2 = j1 + t - 1;
                 let s = self.itf[h + i];
                 let s_shoup = self.itf_shoup[h + i];
 
-                
                 // Обрабатываем пары элементов в текущей группе
                 (j1..=j2).for_each(|j| {
                     let u = ax[j];
                     let v = ax[j + t];
-                    
+
                     // Операция бабочки
                     ax[j] = self.class.modadd(u, v);
                     ax[j + t] = self.class.modsub(u, v);
                     // ax[j + t] = self.class.modmul_shoup(ax[j + t], s, s_shoup);
                     self.class.modmul_shoup_eq(&mut ax[j + t], s, s_shoup);
                 });
-                
+
                 j1 += t << 1;
             });
-            
+
             h >>= 1;
             t <<= 1;
         }
@@ -301,12 +300,12 @@ impl<const N: usize> PolyRing<N> {
         // Финальная нормализация
         ax.iter_mut().for_each(|x| {
             // *x = self.class.modmul_shoup(*x, self.inv_n, self.inv_n_shoup);
-            self.class.modmul_shoup_eq(&mut *x, self.inv_n, self.inv_n_shoup);
+            self.class
+                .modmul_shoup_eq(&mut *x, self.inv_n, self.inv_n_shoup);
         });
     }
 
-
-    pub fn ntt_negacyclic_convolution(&self, ax: &[u64; N], bx: &[u64; N]) -> [u64; N]{
+    pub fn ntt_negacyclic_convolution(&self, ax: &[u64; N], bx: &[u64; N]) -> [u64; N] {
         let mut ax_ntt = *ax;
         let mut bx_ntt = *bx;
 
@@ -320,7 +319,7 @@ impl<const N: usize> PolyRing<N> {
         cx_ntt
     }
 
-    pub fn ntt_negacyclic_convolution_shoup(&self, ax: &[u64; N], bx: &[u64; N]) -> [u64; N]{
+    pub fn ntt_negacyclic_convolution_shoup(&self, ax: &[u64; N], bx: &[u64; N]) -> [u64; N] {
         let mut ax_ntt = *ax;
         let mut bx_ntt = *bx;
 
@@ -349,7 +348,7 @@ fn compute_twiddle_factors<const N: usize>(
     class: &CongruenceClass,
     g: u64,
     is_inverse: bool,
-) -> [u64; N]{
+) -> [u64; N] {
     let mut tf = [0u64; N];
     let mut tf_direct = [0u64; N];
     let degree_len = usize::BITS - N.leading_zeros() - 1;
