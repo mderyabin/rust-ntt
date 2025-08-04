@@ -261,7 +261,6 @@ fn test_modmul_struct_vs_naive() {
     let q = 741507920154517877;
     let class = CongruenceClass::new(q);
 
-    
     for _ in 0..1000 {
         let a: u64 = rng.random_range(1..q);
         let b: u64 = rng.random_range(1..q);
@@ -283,12 +282,11 @@ fn test_modmul_eq_struct_vs_naive() {
     let q = 741507920154517877;
     let class = CongruenceClass::new(q);
 
-    
     for _ in 0..1000 {
         let mut a: u64 = rng.random_range(1..q);
         let b: u64 = rng.random_range(1..q);
 
-        let a_copy = a.clone();
+        let a_copy = a;
 
         let slow = modmul_naive(a, b, q); // Reference
         class.modmul_eq(&mut a, b); // Barrett
@@ -303,7 +301,7 @@ fn test_modmul_eq_struct_vs_naive() {
 
 #[test]
 fn test_generator() {
-    // warning: slow! 
+    // warning: slow!
     let n = 1usize << 10;
     let mut q = find_first_prime_up(52, n);
 
@@ -315,18 +313,82 @@ fn test_generator() {
         let g = find_generator(q, n);
 
         let check1 = class.modexp(g, n as u64);
-        let check2 = class.modexp(g, (n<<1) as u64);
+        let check2 = class.modexp(g, (n << 1) as u64);
 
         assert_eq!(
-                check1, q-1,
-                "power n g = {}, got {}, expected {}, q = {}",
-                g, check1, q-1, q
-            );
+            check1,
+            q - 1,
+            "power n g = {}, got {}, expected {}, q = {}",
+            g,
+            check1,
+            q - 1,
+            q
+        );
         assert_eq!(
-                check2, 1,
-                "power 2n g = {}, got {}, expected {}, q = {}",
-                g, check2, 1, q
-            );
+            check2, 1,
+            "power 2n g = {}, got {}, expected {}, q = {}",
+            g, check2, 1, q
+        );
     }
+}
 
+
+#[test]
+fn test_modmul_shoup_struct() {
+    let mut generator = rng();
+
+    let class     = CongruenceClass::new(Q);
+
+    for _ in 0..100 {
+
+        let a: u64 = generator.random_range(1..Q);
+        let b: u64 = generator.random_range(1..Q);
+
+        let expected = modmul_naive(a, b, Q);
+
+        let prec = class.precompute_shoup(b);
+
+        assert_eq!(class.modmul_shoup(a, b, prec), expected);
+    }   
+}
+
+#[test]
+fn test_modmul_shoup_eq_struct() {
+    let mut generator = rng();
+
+    let class     = CongruenceClass::new(Q);
+
+    for _ in 0..100 {
+
+        let mut a: u64 = generator.random_range(1..Q);
+        let b: u64 = generator.random_range(1..Q);
+
+        let expected = modmul_naive(a, b, Q);
+
+        let prec = class.precompute_shoup(b);
+
+        class.modmul_shoup_eq(&mut a, b, prec);
+
+        assert_eq!(a, expected);
+    }   
+}
+
+
+#[test]
+fn test_modmul_shoup_as64_struct() {
+    let mut generator = rng();
+
+    let class     = CongruenceClass::new(Q);
+
+    for _ in 0..100 {
+
+        let a: u64 = generator.random_range(1..Q);
+        let b: u64 = generator.random_range(1..Q);
+
+        let expected = modmul_naive(a, b, Q);
+
+        let prec = class.precompute_shoup(b);
+
+        assert_eq!(class.modmul_shoup_as64(a, b, prec), expected);
+    }   
 }
