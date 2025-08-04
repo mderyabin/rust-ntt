@@ -187,12 +187,12 @@ fn compute_twiddle_factors<const DEGREE: usize>(
 ///
 /// # Examples
 /// ```
-/// # use rust_ntt::*;
+/// # use rust_ntt::context::bit_reverse;
 /// assert_eq!(bit_reverse(0b101, 3), 0b101); // 5 -> 5 (palindromic)
 /// assert_eq!(bit_reverse(0b001, 3), 0b100); // 1 -> 4
 /// assert_eq!(bit_reverse(0b010, 3), 0b010); // 2 -> 2 (palindromic)
 /// ```
-fn bit_reverse(number: usize, bit_length: usize) -> usize {
+pub fn bit_reverse(number: usize, bit_length: usize) -> usize {
     let mut reversed = 0;
     for i in 0..bit_length {
         if (number >> i) & 1 != 0 {
@@ -239,7 +239,7 @@ mod tests {
     #[test]
     #[should_panic(expected = "must satisfy q ≡ 1")]
     fn test_invalid_modulus() {
-        let q = 17; // 17 ≢ 1 (mod 8) for DEGREE=4
+        let q = 19; // 19 ≡ 3 (mod 8), doesn't satisfy q ≡ 1 (mod 8) for DEGREE=4
         let _ctx = NttContext::<4>::new(q);
     }
 

@@ -334,7 +334,7 @@ impl<const N: usize> PolyRing<N> {
     }
 }
 
-fn bit_reverse(number: usize, length: usize) -> usize {
+pub fn bit_reverse(number: usize, length: usize) -> usize {
     let mut reversed = 0;
     (0..length).for_each(|i| {
         if (number >> i) & 1 != 0 {

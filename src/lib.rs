@@ -7,5 +7,6 @@ pub mod traits;
 pub use context::NttContext;
 pub use ntmath::*;
 pub use ntt::NttPolynomial;
+pub use polymath::bit_reverse;
 pub use polymath::*;
-pub use traits::{PolyRing, PolySampler};
+// pub use traits::{PolyRing, PolySampler};
