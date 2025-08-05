@@ -140,12 +140,13 @@ impl CongruenceClass {
         // эта функция как альтернатива modmul_shoup
         // по идее mul и tmp (умножение на q) можно делать в u64 так как верхняя часть обрезается.
         // это должно быть намного быстрее.
-        // бенчмарк этой функции действительно быстрее, 
+        // бенчмарк этой функции действительно быстрее,
         // однако когда делаю бенчмарк ntt на ее основе, он значительно медленнее.
         // скорее всего из-за проверок и wrapping_mul
         // однако если делать без wrapping_mul то тесты падают и функция возвращает неверное значение
         let mul = a.wrapping_mul(b);
-        let tmp = ((((a as u128) * (b_prec as u128)) >> 64) as u64).wrapping_mul(self.q as u64);
+        let tmp = ((((a as u128) * (b_prec as u128)) >> 64) as u64)
+            .wrapping_mul(self.q as u64);
 
         let r = mul.wrapping_sub(tmp);
 
@@ -160,9 +161,9 @@ impl CongruenceClass {
     pub fn modmul_shoup(&self, a: u64, b: u64, b_prec: u64) -> u64 {
         // let mul = a * b;
         // let tmp = ((((a as u128) * (b_prec as u128)) >> 64) as u64) * (self.q as u64);
-        
+
         let mul = (a as u128) * (b as u128);
-        let tmp = (((a as u128) * (b_prec as u128)) >> 64)  * (self.q as u128);
+        let tmp = (((a as u128) * (b_prec as u128)) >> 64) * (self.q as u128);
 
         // let r = mul.wrapping_sub(tmp);
         let r = (mul - tmp) as u64;
@@ -299,9 +300,14 @@ impl CongruenceClass {
         };
     }
 
+    // #[inline]
+    // pub fn modneg(&self, a: u64) -> u64 {
+    //     self.q.wrapping_sub(a)
+    // }
+
     #[inline]
     pub fn modneg(&self, a: u64) -> u64 {
-        self.q.wrapping_sub(a)
+        if a == 0 { 0 } else { self.q.wrapping_sub(a) }
     }
 
     #[inline]

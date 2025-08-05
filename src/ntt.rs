@@ -586,10 +586,14 @@ mod tests {
     fn test_sample_random() {
         const N: usize = 8;
         let q = find_first_prime_up(10, N);
+        println!("q: {q}");
         let ctx = NttContext::<N>::new(q);
 
         let poly1 = NttPolynomial::sample_random(Arc::clone(&ctx));
         let poly2 = NttPolynomial::sample_random(Arc::clone(&ctx));
+
+        println!("Poly1: {:?}", poly1);
+        println!("Poly2: {:?}", poly2);
 
         // Very unlikely to be identical
         assert_ne!(poly1.coeffs(), poly2.coeffs());
