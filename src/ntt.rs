@@ -177,6 +177,40 @@ impl<const DEGREE: usize> NttPolynomial<DEGREE> {
         }
     }
 
+    /// Naive O(n²) negacyclic convolution for benchmarking/testing
+    pub fn naive_negacyclic_convolution(&self, other: &Self) -> Self {
+        debug_assert_eq!(self.context.modulus(), other.context.modulus());
+
+        let mut result_coeffs = [0u64; DEGREE];
+
+        for i in 0..DEGREE {
+            // Sum products for j <= i
+            for j in 0..=i {
+                self.context.class.modadd_eq(
+                    &mut result_coeffs[i],
+                    self.context
+                        .class
+                        .modmul(self.coeffs[j], other.coeffs[i - j]),
+                );
+            }
+
+            // Subtract products for j > i (negative wraparound)
+            for j in (i + 1)..DEGREE {
+                self.context.class.modsub_eq(
+                    &mut result_coeffs[i],
+                    self.context
+                        .class
+                        .modmul(self.coeffs[j], other.coeffs[DEGREE + i - j]),
+                );
+            }
+        }
+
+        NttPolynomial {
+            coeffs: result_coeffs,
+            context: Arc::clone(&self.context),
+        }
+    }
+
     // Convolution methods
     pub fn negacyclic_convolution(&self, other: &Self) -> Self {
         debug_assert_eq!(
@@ -228,7 +262,20 @@ impl<const DEGREE: usize> NttPolynomial<DEGREE> {
         result
     }
 
-    // Sampling utility
+    pub fn sample_random<R: rand::Rng>(
+        context: Arc<NttContext<DEGREE>>,
+        rng: &mut R,
+    ) -> Self {
+        let mut coeffs = [0u64; DEGREE];
+
+        for coeff in &mut coeffs {
+            *coeff = rng.random_range(1..context.modulus());
+        }
+
+        Self { coeffs, context }
+    }
+
+    /* // Sampling utility
     pub fn sample_random(context: Arc<NttContext<DEGREE>>) -> Self {
         use rand::{Rng, rng};
 
@@ -240,7 +287,7 @@ impl<const DEGREE: usize> NttPolynomial<DEGREE> {
         }
 
         Self { coeffs, context }
-    }
+    } */
 }
 
 // Trait implementations - this is where the math logic lives
@@ -403,7 +450,8 @@ impl<const DEGREE: usize> Neg for &NttPolynomial<DEGREE> {
 mod tests {
     use super::*;
     use crate::context::NttContext;
-    use crate::ntmath::find_first_prime_up;
+    use crate::math::find_first_prime_up;
+    use rand::{SeedableRng, rngs::StdRng};
 
     #[test]
     fn test_polynomial_creation() {
@@ -479,10 +527,11 @@ mod tests {
     #[test]
     fn test_ntt_forward_inverse() {
         const N: usize = 4;
+        let mut rng = StdRng::seed_from_u64(42); // Deterministic seed
         let q = find_first_prime_up(10, N);
         let ctx = NttContext::<N>::new(q);
 
-        let original = NttPolynomial::sample_random(Arc::clone(&ctx));
+        let original = NttPolynomial::sample_random(Arc::clone(&ctx), &mut rng);
         let mut test_poly = original.clone();
 
         // Forward then inverse should give back original
@@ -495,10 +544,11 @@ mod tests {
     #[test]
     fn test_ntt_shoup_forward_inverse() {
         const N: usize = 4;
+        let mut rng = StdRng::seed_from_u64(42); // Deterministic seed
         let q = find_first_prime_up(10, N);
         let ctx = NttContext::<N>::new(q);
 
-        let original = NttPolynomial::sample_random(Arc::clone(&ctx));
+        let original = NttPolynomial::sample_random(Arc::clone(&ctx), &mut rng);
         let mut test_poly = original.clone();
 
         // Forward then inverse should give back original (Shoup version)
@@ -511,11 +561,12 @@ mod tests {
     #[test]
     fn test_convolution_consistency() {
         const N: usize = 4;
+        let mut rng = StdRng::seed_from_u64(42); // Deterministic seed
         let q = find_first_prime_up(10, N);
         let ctx = NttContext::<N>::new(q);
 
-        let a = NttPolynomial::sample_random(Arc::clone(&ctx));
-        let b = NttPolynomial::sample_random(Arc::clone(&ctx));
+        let a = NttPolynomial::sample_random(Arc::clone(&ctx), &mut rng);
+        let b = NttPolynomial::sample_random(Arc::clone(&ctx), &mut rng);
 
         // Both convolution methods should give same result
         let result1 = a.negacyclic_convolution(&b);
@@ -563,11 +614,12 @@ mod tests {
     #[test]
     fn test_zero_properties() {
         const N: usize = 4;
+        let mut rng = StdRng::seed_from_u64(42); // Deterministic seed
         let q = find_first_prime_up(10, N);
         let ctx = NttContext::<N>::new(q);
 
         let zero = NttPolynomial::zero(Arc::clone(&ctx));
-        let a = NttPolynomial::sample_random(Arc::clone(&ctx));
+        let a = NttPolynomial::sample_random(Arc::clone(&ctx), &mut rng);
 
         // a + 0 = a
         let a_plus_zero = &a + &zero;
@@ -578,6 +630,10 @@ mod tests {
         assert_eq!(a_times_zero.coeffs(), &[0u64; N]);
 
         // -0 = 0
+        println!("q: {}", q);
+        println!("modneg(0) = {}", zero.context.class.modneg(0));
+        println!("modneg(1000) = {}", zero.context.class.modneg(1000));
+        println!("modneg(3000) = {}", zero.context.class.modneg(3000));
         let neg_zero = -&zero;
         assert_eq!(neg_zero.coeffs(), &[0u64; N]);
     }
@@ -585,12 +641,13 @@ mod tests {
     #[test]
     fn test_sample_random() {
         const N: usize = 8;
+        let mut rng = StdRng::seed_from_u64(42); // Deterministic seed
         let q = find_first_prime_up(10, N);
         println!("q: {q}");
         let ctx = NttContext::<N>::new(q);
 
-        let poly1 = NttPolynomial::sample_random(Arc::clone(&ctx));
-        let poly2 = NttPolynomial::sample_random(Arc::clone(&ctx));
+        let poly1 = NttPolynomial::sample_random(Arc::clone(&ctx), &mut rng);
+        let poly2 = NttPolynomial::sample_random(Arc::clone(&ctx), &mut rng);
 
         println!("Poly1: {:?}", poly1);
         println!("Poly2: {:?}", poly2);

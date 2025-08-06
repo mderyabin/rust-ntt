@@ -1,4 +1,5 @@
-use crate::ntmath::{CongruenceClass, find_generator};
+use crate::congruence::CongruenceClass;
+use crate::math::find_generator;
 use std::sync::Arc;
 
 /// Shared NTT context containing precomputed values for a specific degree and modulus.
@@ -33,6 +34,16 @@ pub struct NttContext<const DEGREE: usize> {
     pub(crate) itf: [u64; DEGREE],
     /// Shoup precomputed values for inverse twiddle factors
     pub(crate) itf_shoup: [u64; DEGREE],
+}
+
+impl<const DEGREE: usize> NttContext<DEGREE> {
+    pub fn tf(&self) -> &[u64; DEGREE] {
+        &self.tf
+    }
+
+    pub fn itf(&self) -> &[u64; DEGREE] {
+        &self.itf
+    }
 }
 
 impl<const DEGREE: usize> NttContext<DEGREE> {
@@ -109,7 +120,7 @@ impl<const DEGREE: usize> NttContext<DEGREE> {
 
     /// Get the modulus for this context
     pub fn modulus(&self) -> u64 {
-        self.class.q
+        self.class.q()
     }
 
     /// Get the polynomial degree for this context
@@ -128,7 +139,7 @@ impl<const DEGREE: usize> NttContext<DEGREE> {
 
             // We'd need to compute discrete log to get g, but for debugging
             // we can verify the generator property instead
-            let g = find_generator(self.class.q, DEGREE);
+            let g = find_generator(self.class.q(), DEGREE);
             g
         } else {
             1 // Trivial case
@@ -205,7 +216,7 @@ pub fn bit_reverse(number: usize, bit_length: usize) -> usize {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ntmath::{find_first_prime_down, find_first_prime_up};
+    use crate::math::{find_first_prime_down, find_first_prime_up};
 
     #[test]
     fn test_context_creation() {

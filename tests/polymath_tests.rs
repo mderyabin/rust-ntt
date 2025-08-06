@@ -1,4 +1,4 @@
-use rust_ntt::*;
+/* use rust_ntt::*;
 
 const Q: u64 = 741507920154517877;
 // const Q : u64 = 1u64<<62-1;
@@ -137,4 +137,4 @@ fn test_convolution_shoup() {
 
         assert_eq!(cx, expected);
     }
-}
+} */

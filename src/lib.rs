@@ -1,12 +1,14 @@
+pub mod congruence;
 pub mod context;
-pub mod ntmath;
+pub mod math;
 pub mod ntt;
-pub mod polymath;
-pub mod traits;
 
+pub use congruence::CongruenceClass;
 pub use context::NttContext;
-pub use ntmath::*;
+pub use math::{
+    barrett_precompute, barrett_precompute_old, find_first_prime_down,
+    find_first_prime_up, find_next_prime_up, modadd, modadd_naive, modmul_barrett,
+    modmul_barrett_eq, modmul_barrett_old, modmul_barrett_old_eq, modmul_naive,
+    modsub,
+};
 pub use ntt::NttPolynomial;
-pub use polymath::bit_reverse;
-pub use polymath::*;
-// pub use traits::{PolyRing, PolySampler};

@@ -1,4 +1,7 @@
 use rand::{Rng, rng};
+use rust_ntt::math::{
+    find_first_prime_up, find_generator, find_next_prime_up, modnegate,
+};
 use rust_ntt::*;
 
 // const Q : u64 = 741507920154517877;
@@ -332,15 +335,13 @@ fn test_generator() {
     }
 }
 
-
 #[test]
 fn test_modmul_shoup_struct() {
     let mut generator = rng();
 
-    let class     = CongruenceClass::new(Q);
+    let class = CongruenceClass::new(Q);
 
     for _ in 0..100 {
-
         let a: u64 = generator.random_range(1..Q);
         let b: u64 = generator.random_range(1..Q);
 
@@ -349,17 +350,16 @@ fn test_modmul_shoup_struct() {
         let prec = class.precompute_shoup(b);
 
         assert_eq!(class.modmul_shoup(a, b, prec), expected);
-    }   
+    }
 }
 
 #[test]
 fn test_modmul_shoup_eq_struct() {
     let mut generator = rng();
 
-    let class     = CongruenceClass::new(Q);
+    let class = CongruenceClass::new(Q);
 
     for _ in 0..100 {
-
         let mut a: u64 = generator.random_range(1..Q);
         let b: u64 = generator.random_range(1..Q);
 
@@ -370,18 +370,16 @@ fn test_modmul_shoup_eq_struct() {
         class.modmul_shoup_eq(&mut a, b, prec);
 
         assert_eq!(a, expected);
-    }   
+    }
 }
-
 
 #[test]
 fn test_modmul_shoup_as64_struct() {
     let mut generator = rng();
 
-    let class     = CongruenceClass::new(Q);
+    let class = CongruenceClass::new(Q);
 
     for _ in 0..100 {
-
         let a: u64 = generator.random_range(1..Q);
         let b: u64 = generator.random_range(1..Q);
 
@@ -390,5 +388,5 @@ fn test_modmul_shoup_as64_struct() {
         let prec = class.precompute_shoup(b);
 
         assert_eq!(class.modmul_shoup_as64(a, b, prec), expected);
-    }   
+    }
 }

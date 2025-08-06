@@ -1,7 +1,7 @@
 use rust_ntt::*;
 
 fn main() {
-    let n: usize = 1usize << 10;
+    /* let n: usize = 1usize << 10;
     let mut q = find_first_prime_up(52, n);
 
     let class = CongruenceClass::new(q);
@@ -37,5 +37,5 @@ fn main() {
     println!("generator = {}", g);
 
     println!("check 1 = {}", class.modexp(g, n as u64));
-    println!("check 2 = {}", class.modexp(g, (n << 1) as u64));
+    println!("check 2 = {}", class.modexp(g, (n << 1) as u64)); */
 }
