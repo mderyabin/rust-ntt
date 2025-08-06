@@ -182,7 +182,5 @@ pub fn find_generator(q: u64, n: usize) -> u64 {
     let m = (n << 1) as u64;
 
     let g0 = find_primitive_root(q);
-    let g = class.modexp(g0, (q - 1) / m);
-
-    g
+    class.modexp(g0, (q - 1) / m)
 }

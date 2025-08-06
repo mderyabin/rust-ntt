@@ -177,17 +177,17 @@ impl<const DEGREE: usize> NttPolynomial<DEGREE> {
         }
     }
 
-    /// Naive O(n²) negacyclic convolution for benchmarking/testing
+    /// Naive O(n^2) negacyclic convolution for benchmarking/testing
     pub fn naive_negacyclic_convolution(&self, other: &Self) -> Self {
         debug_assert_eq!(self.context.modulus(), other.context.modulus());
 
         let mut result_coeffs = [0u64; DEGREE];
 
-        for i in 0..DEGREE {
+        for (i, result) in result_coeffs.iter_mut().enumerate() {
             // Sum products for j <= i
             for j in 0..=i {
                 self.context.class.modadd_eq(
-                    &mut result_coeffs[i],
+                    result,
                     self.context
                         .class
                         .modmul(self.coeffs[j], other.coeffs[i - j]),
@@ -197,7 +197,7 @@ impl<const DEGREE: usize> NttPolynomial<DEGREE> {
             // Subtract products for j > i (negative wraparound)
             for j in (i + 1)..DEGREE {
                 self.context.class.modsub_eq(
-                    &mut result_coeffs[i],
+                    result,
                     self.context
                         .class
                         .modmul(self.coeffs[j], other.coeffs[DEGREE + i - j]),
@@ -274,20 +274,6 @@ impl<const DEGREE: usize> NttPolynomial<DEGREE> {
 
         Self { coeffs, context }
     }
-
-    /* // Sampling utility
-    pub fn sample_random(context: Arc<NttContext<DEGREE>>) -> Self {
-        use rand::{Rng, rng};
-
-        let mut generator = rng();
-        let mut coeffs = [0u64; DEGREE];
-
-        for coeff in &mut coeffs {
-            *coeff = generator.random_range(1..context.modulus());
-        }
-
-        Self { coeffs, context }
-    } */
 }
 
 // Trait implementations - this is where the math logic lives
@@ -302,11 +288,15 @@ impl<const DEGREE: usize> Add for &NttPolynomial<DEGREE> {
             "Cannot add polynomials with different moduli"
         );
 
-        let mut result_coeffs = [0u64; DEGREE];
-        for i in 0..DEGREE {
-            result_coeffs[i] =
-                self.context.class.modadd(self.coeffs[i], rhs.coeffs[i]);
-        }
+        // let mut result_coeffs = [0u64; DEGREE];
+        // for i in 0..DEGREE {
+        //     result_coeffs[i] =
+        //         self.context.class.modadd(self.coeffs[i], rhs.coeffs[i]);
+        // }
+
+        let result_coeffs = std::array::from_fn(|i| {
+            self.context.class.modadd(self.coeffs[i], rhs.coeffs[i])
+        });
 
         NttPolynomial {
             coeffs: result_coeffs,
@@ -351,11 +341,9 @@ impl<const DEGREE: usize> Sub for &NttPolynomial<DEGREE> {
             "Cannot subtract polynomials with different moduli"
         );
 
-        let mut result_coeffs = [0u64; DEGREE];
-        for i in 0..DEGREE {
-            result_coeffs[i] =
-                self.context.class.modsub(self.coeffs[i], rhs.coeffs[i]);
-        }
+        let result_coeffs = std::array::from_fn(|i| {
+            self.context.class.modsub(self.coeffs[i], rhs.coeffs[i])
+        });
 
         NttPolynomial {
             coeffs: result_coeffs,
@@ -418,10 +406,12 @@ impl<const DEGREE: usize> Neg for NttPolynomial<DEGREE> {
     type Output = Self;
 
     fn neg(self) -> Self::Output {
-        let mut result_coeffs = [0u64; DEGREE];
-        for i in 0..DEGREE {
-            result_coeffs[i] = self.context.class.modneg(self.coeffs[i]);
-        }
+        // let mut result_coeffs = [0u64; DEGREE];
+        // for i in 0..DEGREE {
+        //     result_coeffs[i] = self.context.class.modneg(self.coeffs[i]);
+        // }
+
+        let result_coeffs = self.coeffs.map(|c| self.context.class.modneg(c));
 
         NttPolynomial {
             coeffs: result_coeffs,
@@ -434,10 +424,13 @@ impl<const DEGREE: usize> Neg for &NttPolynomial<DEGREE> {
     type Output = NttPolynomial<DEGREE>;
 
     fn neg(self) -> Self::Output {
-        let mut result_coeffs = [0u64; DEGREE];
-        for i in 0..DEGREE {
-            result_coeffs[i] = self.context.class.modneg(self.coeffs[i]);
-        }
+        // TODO: remove it
+        // let mut result_coeffs = [0u64; DEGREE];
+        // for i in 0..DEGREE {
+        //     result_coeffs[i] = self.context.class.modneg(self.coeffs[i]);
+        // }
+
+        let result_coeffs = self.coeffs.map(|c| self.context.class.modneg(c));
 
         NttPolynomial {
             coeffs: result_coeffs,

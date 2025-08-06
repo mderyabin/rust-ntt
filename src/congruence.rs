@@ -28,8 +28,7 @@ impl CongruenceClass {
     // mu = (2^126 / q)
 
     pub fn precompute_shoup(&self, b: u64) -> u64 {
-        let w = (((b as u128) << 64) / (self.q as u128)) as u64;
-        w
+        (((b as u128) << 64) / (self.q as u128)) as u64
     }
 
     #[inline]
@@ -42,8 +41,8 @@ impl CongruenceClass {
         // скорее всего из-за проверок и wrapping_mul
         // однако если делать без wrapping_mul то тесты падают и функция возвращает неверное значение
         let mul = a.wrapping_mul(b);
-        let tmp = ((((a as u128) * (b_prec as u128)) >> 64) as u64)
-            .wrapping_mul(self.q as u64);
+        let tmp =
+            ((((a as u128) * (b_prec as u128)) >> 64) as u64).wrapping_mul(self.q);
 
         let r = mul.wrapping_sub(tmp);
 

@@ -44,6 +44,10 @@ impl<const DEGREE: usize> NttContext<DEGREE> {
     pub fn itf(&self) -> &[u64; DEGREE] {
         &self.itf
     }
+
+    pub fn class(&self) -> &CongruenceClass {
+        &self.class
+    }
 }
 
 impl<const DEGREE: usize> NttContext<DEGREE> {
@@ -68,18 +72,16 @@ impl<const DEGREE: usize> NttContext<DEGREE> {
         // Validate that DEGREE is a power of 2
         assert!(
             DEGREE.is_power_of_two() && DEGREE > 0,
-            "DEGREE must be a power of 2, got {}",
-            DEGREE
+            "DEGREE must be a power of 2, got {DEGREE}"
         );
 
         // Validate modulus requirements
-        assert!(q >= 3, "Modulus must be at least 3, got {}", q);
-        assert!(q < (1u64 << 63), "Modulus must be < 2^63, got {}", q);
+        assert!(q >= 3, "Modulus must be at least 3, got {q}");
+        assert!(q < (1u64 << 63), "Modulus must be < 2^63, got {q}");
         assert_eq!(
             (q - 1) % (2 * DEGREE as u64),
             0,
-            "Modulus {} must satisfy q ≡ 1 (mod 2*DEGREE={})",
-            q,
+            "Modulus {q} must satisfy q ≡ 1 (mod 2*DEGREE={})",
             2 * DEGREE
         );
 
@@ -133,14 +135,9 @@ impl<const DEGREE: usize> NttContext<DEGREE> {
         // Reconstruct generator from first non-trivial twiddle factor
         // tf[1] = g^(bit_reverse(1)) = g^(2^(log2(DEGREE)-1)) for DEGREE > 1
         if DEGREE > 1 {
-            let log_degree = DEGREE.trailing_zeros();
-            let power = 1u64 << (log_degree - 1);
-            let g_to_power = self.tf[1];
-
             // We'd need to compute discrete log to get g, but for debugging
             // we can verify the generator property instead
-            let g = find_generator(self.class.q(), DEGREE);
-            g
+            find_generator(self.class.q(), DEGREE)
         } else {
             1 // Trivial case
         }
@@ -180,9 +177,9 @@ fn compute_twiddle_factors<const DEGREE: usize>(
     }
 
     // Reorder in bit-reversed order for NTT algorithm
-    for i in 0..DEGREE {
+    for (i, tf_elem) in tf.iter_mut().enumerate() {
         let bit_rev_i = bit_reverse(i, log_degree);
-        tf[i] = tf_direct[bit_rev_i];
+        *tf_elem = tf_direct[bit_rev_i];
     }
 
     tf
@@ -293,9 +290,6 @@ mod tests {
         let ctx = NttContext::<N>::new(q);
 
         // For each forward twiddle factor, verify inverse relationship
-        let g = ctx.generator();
-        let g_inv = ctx.class.modinv(g);
-
         for i in 0..N {
             let forward_power = ctx.tf[i];
             let inverse_power = ctx.itf[i];
