@@ -11,7 +11,7 @@ fn main() {
     println!("═══════════════════════════════");
     println!("📐 Degree: N = {}", N);
     println!("🔢 Modulus: q = {} (prime, q ≡ 1 mod {})", q, 2 * N);
-    println!("🎯 Ring: ℤ_q[x]/(x^N + 1)\n");
+    println!("🎯 Ring: Z_q[x]/(x^N + 1)\n");
 
     let mut rng = StdRng::seed_from_u64(42); // Deterministic seed
 
@@ -41,6 +41,8 @@ fn main() {
 }
 
 /*
+Sage math example, can copy paste!
+
 q = 1033
 N = 4
 R.<x> = PolynomialRing(GF(q))
