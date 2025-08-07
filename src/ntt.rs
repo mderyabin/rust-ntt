@@ -1,8 +1,37 @@
+//! High-level polynomial operations using Number Theoretic Transform.
+//!
+//! This module provides the main `NttPolynomial` type that represents polynomials
+//! in the ring `Z_q[x]/(x^N + 1)` with efficient negacyclic convolution via NTT.
+//!
+//! The polynomial operations (addition, multiplication) are implemented as standard
+//! Rust operators, making the API intuitive while providing O(N log N) performance
+//! for multiplication through NTT-based convolution.
 use crate::context::NttContext;
 use std::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 use std::sync::Arc;
 
-/// Polynomial in NTT-friendly form with shared context
+/// Polynomial in the ring `Z_q[x]/(x^N + 1)` with NTT-optimized operations.
+///
+/// Represents a polynomial of degree < N with coefficients in Z_q, supporting
+/// fast negacyclic convolution where `x^N = -1`. All arithmetic operations
+/// maintain this negacyclic property automatically.
+///
+/// # Type Parameters
+/// * `DEGREE` - Polynomial degree (must be power of 2), fixed at compile time
+///
+/// # Examples
+/// ```rust
+/// use rust_ntt::*;
+/// use std::sync::Arc;
+///
+/// const N: usize = 4;
+/// let q = find_first_prime_up(10, N);
+/// let ctx = NttContext::<N>::new(q);
+///
+/// let a = NttPolynomial::from_coeffs([1, 2, 3, 4], Arc::clone(&ctx));
+/// let b = NttPolynomial::from_coeffs([2, 1, 0, 1], Arc::clone(&ctx));
+/// let c = &a * &b; // Fast negacyclic convolution
+/// ```
 #[derive(Debug, Clone)]
 pub struct NttPolynomial<const DEGREE: usize> {
     coeffs: [u64; DEGREE],
@@ -262,6 +291,7 @@ impl<const DEGREE: usize> NttPolynomial<DEGREE> {
         result
     }
 
+    /// Generate random polynomial with coefficients in [1, q).
     pub fn sample_random<R: rand::Rng>(
         context: Arc<NttContext<DEGREE>>,
         rng: &mut R,
@@ -406,11 +436,6 @@ impl<const DEGREE: usize> Neg for NttPolynomial<DEGREE> {
     type Output = Self;
 
     fn neg(self) -> Self::Output {
-        // let mut result_coeffs = [0u64; DEGREE];
-        // for i in 0..DEGREE {
-        //     result_coeffs[i] = self.context.class.modneg(self.coeffs[i]);
-        // }
-
         let result_coeffs = self.coeffs.map(|c| self.context.class.modneg(c));
 
         NttPolynomial {
@@ -424,12 +449,6 @@ impl<const DEGREE: usize> Neg for &NttPolynomial<DEGREE> {
     type Output = NttPolynomial<DEGREE>;
 
     fn neg(self) -> Self::Output {
-        // TODO: remove it
-        // let mut result_coeffs = [0u64; DEGREE];
-        // for i in 0..DEGREE {
-        //     result_coeffs[i] = self.context.class.modneg(self.coeffs[i]);
-        // }
-
         let result_coeffs = self.coeffs.map(|c| self.context.class.modneg(c));
 
         NttPolynomial {

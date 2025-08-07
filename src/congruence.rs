@@ -1,8 +1,33 @@
+/// Precomputed modular arithmetic context using Barrett reduction.
+///
+/// This struct encapsulates all precomputed values needed for efficient modular
+/// arithmetic operations modulo a fixed prime `q`. Barrett reduction avoids
+/// expensive division operations by precomputing reduction parameters.
+///
+/// # Mathematical Background
+///
+/// Barrett reduction replaces `a * b mod q` with:
+/// 1. Compute `μ = ⌊2^(2*logq) / q⌋` (precomputed)
+/// 2. Estimate quotient: `⌊(a*b) >> (logq-2) * μ >> (logq+2)⌋`
+/// 3. Compute remainder: `a*b - estimated_quotient * q`
+/// 4. Apply final correction if needed
+///
+/// # Examples
+///
+/// ```rust
+/// use rust_ntt::CongruenceClass;
+///
+/// let q = 97; // Prime modulus
+/// let class = CongruenceClass::new(q);
+///
+/// let result = class.modmul(15, 23); // 15 * 23 mod 97
+/// assert_eq!(result, (15 * 23) % 97);
+/// ```
 #[derive(Debug, Clone, Copy)]
 pub struct CongruenceClass {
-    mu: u64,
-    q: u64,
-    logq: u64,
+    mu: u64,   // Barrett parameter μ = ⌊2^(2*logq) / q⌋
+    q: u64,    // Prime modulus
+    logq: u64, // Bit length of q (⌈log₂(q)⌉)
 }
 
 // Here are getters
@@ -14,6 +39,15 @@ impl CongruenceClass {
 }
 
 impl CongruenceClass {
+    /// Creates a new modular arithmetic context for the given modulus.
+    ///
+    /// Precomputes Barrett reduction parameters for efficient modular operations.
+    ///
+    /// # Arguments
+    /// * `q` - Prime modulus, must satisfy 2 ≤ q < 2^63
+    ///
+    /// # Panics
+    /// * If q < 2 or q ≥ 2^63
     pub fn new(q: u64) -> Self {
         assert!(q >= 2, "modulus must be ≥ 2");
         assert!(q < (1u64 << 63), "modulus must be < 2^63");
@@ -27,10 +61,32 @@ impl CongruenceClass {
     }
     // mu = (2^126 / q)
 
+    /// Precomputes Shoup parameter for repeated multiplications with `b`.
+    ///
+    /// When multiplying many values by the same `b`, precomputing this parameter
+    /// and using `modmul_shoup()` is faster than repeated `modmul()` calls.
+    ///
+    /// # Returns
+    /// Shoup parameter `⌊b * 2^64 / q⌋` for use with `modmul_shoup()`
+    ///
+    /// # Example
+    /// ```ignore
+    /// let prec = class.precompute_shoup(42);
+    /// let result = class.modmul_shoup(15, 42, prec); // Faster than modmul(15, 42)
+    /// ```
     pub fn precompute_shoup(&self, b: u64) -> u64 {
         (((b as u128) << 64) / (self.q as u128)) as u64
     }
 
+    /// Alternative Shoup multiplication using 64-bit arithmetic.
+    ///
+    /// **Experimental**: This variant attempts to use only 64-bit operations
+    /// instead of 128-bit arithmetic, but currently performs worse in practice
+    /// due to additional overflow checks. Kept for research purposes.
+    ///
+    /// # Note
+    /// Despite being faster in microbenchmarks, this performs poorly in actual
+    /// NTT operations due to wrapping_mul overhead and correctness concerns.
     #[inline]
     pub fn modmul_shoup_as64(&self, a: u64, b: u64, b_prec: u64) -> u64 {
         // эта функция как альтернатива modmul_shoup
@@ -53,6 +109,15 @@ impl CongruenceClass {
         }
     }
 
+    /// Optimized modular multiplication using precomputed Shoup parameter.
+    ///
+    /// Faster than `modmul()` when multiplying many values by the same `b`.
+    /// Must use `b_prec` from `precompute_shoup(b)`.
+    ///
+    /// # Arguments
+    /// * `a` - First operand
+    /// * `b` - Second operand (same as used in `precompute_shoup()`)
+    /// * `b_prec` - Precomputed Shoup parameter from `precompute_shoup(b)`
     #[inline]
     pub fn modmul_shoup(&self, a: u64, b: u64, b_prec: u64) -> u64 {
         // let mul = a * b;
@@ -88,6 +153,16 @@ impl CongruenceClass {
         };
     }
 
+    /// Fast modular multiplication: (a * b) mod q.
+    ///
+    /// Uses Barrett reduction to avoid expensive division operations.
+    /// This is the primary method for modular multiplication.
+    ///
+    /// # Arguments
+    /// * `a`, `b` - Operands, should be in range [0, q)
+    ///
+    /// # Returns
+    /// `(a * b) mod q`
     #[inline]
     pub fn modmul(&self, a: u64, b: u64) -> u64 {
         let mul = (a as u128) * (b as u128);
