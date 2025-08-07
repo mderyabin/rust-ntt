@@ -59,7 +59,7 @@ This implementation is based on several key optimizations:
 
 - [Barrett Reduction](https://en.wikipedia.org/wiki/Barrett_reduction)
 - [Montgomery modular multiplication](https://en.wikipedia.org/wiki/Montgomery_modular_multiplication)
-  Precompute `μ = ⌊2^k/q⌋`` to replace division with multiplication and bit shifts
+  Precompute `μ = ⌊2^k/q⌋` to replace division with multiplication and bit shifts
 
 ### Shoup Multiplication
 
