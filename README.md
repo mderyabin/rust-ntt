@@ -8,19 +8,22 @@ implementing fast polynomial multiplication in finite fields.
 
 The Number Theoretic Transform (NTT) is a discrete analogue of the Fast Fourier
 Transform (FFT) that operates over finite fields instead of complex numbers.
-It enables fast polynomial multiplication in O(N \log N) time, significantly
-improving over the naive O(N^2) method.
+It enables fast polynomial multiplication in `O(N log N)` time, significantly
+improving over the naive `O(N^2)` method.
 
 NTT is particularly useful in:
 
-Cryptography: Post-quantum schemes like lattice-based cryptography
-Fully Homomorphic Encryption (FHE): Efficient polynomial operations
-Computer Algebra: Fast polynomial arithmetic over finite fields.
+**Cryptography**: Post-quantum schemes like lattice-based cryptography
+**Fully Homomorphic Encryption (FHE)**: Efficient polynomial operations
+**Computer Algebra**: Fast polynomial arithmetic over finite fields.
 
 This library implements negacyclic convolution in the ring `Z_q[x]/(x^N + 1)`,
 where polynomials "wrap around" with a sign flip: `x^N = -1`.
 
-```
+[A Complete Beginner Guide to the Number Theoretic
+Transform (NTT)](https://eprint.iacr.org/2024/585.pdf)
+
+```rust
 use rand::{SeedableRng, rngs::StdRng};
 use rust_ntt::*;
 use std::sync::Arc;
@@ -101,6 +104,7 @@ cargo test
 
 ```
 cargo run --example convolution
+cargo run --example primes
 ```
 ### ⚡Run benchmarks
 
