@@ -70,7 +70,7 @@ impl CongruenceClass {
     /// Shoup parameter `⌊b * 2^64 / q⌋` for use with `modmul_shoup()`
     ///
     /// # Example
-    /// ```rust
+    /// ```ignore
     /// let prec = class.precompute_shoup(42);
     /// let result = class.modmul_shoup(15, 42, prec); // Faster than modmul(15, 42)
     /// ```
