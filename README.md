@@ -70,7 +70,7 @@ This implementation is based on several key optimizations:
 [Speeding up the Number Theoretic Transform for Faster Ideal Lattice-Based Cryptography](https://eprint.iacr.org/2016/504.pdf)
 `x^N ≡ -1 (mod q)` creates the negacyclic structure needed for lattice cryptography.
 
-- Prime modulus: `q` must be prime and satisfy `q ≡ 1 (mod 2N)``
+- Prime modulus: `q` must be prime and satisfy `q ≡ 1 (mod 2N)`
 - Polynomial degree: `N` must be a power of 2
 
 Use the provided utilities to find suitable primes:
